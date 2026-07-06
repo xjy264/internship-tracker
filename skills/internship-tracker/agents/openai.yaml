@@ -1,4 +1,6 @@
 interface:
   display_name: "实习投递记录"
-  short_description: "用于记录实习投递、面试状态和十五天复看提醒的本地技能"
-  default_prompt: "Use -tracker to add an internship application and check 15-day follow-up reminders."
+  short_description: "维护实习投递管理网页、数据库和部署流程"
+  default_prompt: "Use $internship-tracker to update the internship application dashboard and keep the test, commit, push, deploy workflow."
+policy:
+  allow_implicit_invocation: true

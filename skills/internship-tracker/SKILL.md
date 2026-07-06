@@ -1,57 +1,40 @@
 ---
 name: internship-tracker
-description: Track internship applications in a local CSV repository. Use when Codex needs to add internship applications, update interview status, list applications, check applications that need a 15-day follow-up review, or mark an internship application as reviewed.
+description: Drive the internship-tracker project, a Flask and SQLite web app for managing internship applications. Use when Codex needs to add or modify internship application tracking features, update the web dashboard, maintain the SQLite schema, deploy to the 82 server, or follow the project workflow of test, commit, push, then ask before future deployments.
 ---
 
 # Internship Tracker
 
-Use this skill in the repository root that contains `applications.csv` and `scripts/tracker.py`.
+Use this skill in the `internship-tracker` repository.
 
-## Rules
+## Project rules
 
-- Required fields for a new application: `applied_at`, `company`, `role`.
-- Keep optional fields out of v1 unless the user asks to extend the schema.
-- Represent booleans as `yes`, `no`, or `unknown` where supported.
-- Use the CLI instead of editing `applications.csv` by hand.
+- Keep required application fields limited to `applied_at`, `company`, and `role` unless the user asks to change them.
+- Treat `job_url`, `channel`, `status`, `location`, `resume_version`, `has_interview`, `interview_at`, `interview_passed`, `next_action`, `notes`, and `reviewed_at` as optional.
+- Do not commit `.env`, `data/`, SQLite databases, or real application records.
+- Prefer the existing Flask + SQLite + server-rendered HTML stack; do not add a SPA/build chain unless the user explicitly asks.
 
-## Commands
+## Workflow
 
-Add an application:
+1. Modify locally.
+2. Run `python3 -m unittest` with project dependencies available.
+3. Run `docker compose config` and `docker build -t internship-tracker:local .` for deployment-affecting changes.
+4. Commit to `main`.
+5. Push to `origin/main`.
+6. Ask the user before deploying future changes to the 82 server.
 
-```bash
-python3 scripts/tracker.py add --applied-at YYYY-MM-DD --company 公司 --role 岗位
-```
+## Runtime
 
-Update interview status:
+- Local app entrypoint: `app.py`.
+- Production database: `data/app.sqlite3` mounted by Docker Compose.
+- Production server path: `/home/ubuntu/apps/internship-tracker`.
+- Production URL: `http://82.156.194.174:8020`.
+- SSH key for deployment: `~/.ssh/id_ed25519_remote_20260630`.
 
-```bash
-python3 scripts/tracker.py update --id ID --has-interview yes --interview-passed unknown
-python3 scripts/tracker.py update --id ID --has-interview yes --interview-passed yes
-python3 scripts/tracker.py update --id ID --has-interview no
-```
+## Reminder rule
 
-List all applications:
+Show an application as needing review when:
 
-```bash
-python3 scripts/tracker.py list
-```
-
-Show applications that were submitted at least 15 days ago, have not been reviewed, and still have unknown interview result:
-
-```bash
-python3 scripts/tracker.py reminders
-```
-
-Mark a reminder as reviewed:
-
-```bash
-python3 scripts/tracker.py review --id ID
-```
-
-## Natural language mapping
-
-- “记录/新增/我投了公司岗位” -> `add`.
-- “有面试/没面试/面试通过/面试没过” -> `update`.
-- “看看投递情况” -> `list`.
-- “哪些该复看/提醒我复看” -> `reminders`.
-- “这个岗位我复看过了” -> `review`.
+- `applied_at` is at least 15 days old,
+- `reviewed_at` is empty,
+- `status` is not `通过`, `拒绝`, or `放弃`.

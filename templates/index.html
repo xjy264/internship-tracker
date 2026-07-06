@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>实习投递看板</title>
+  <style>
+    :root{--blue:#2563eb;--bg:#f6f8fc;--text:#182235;--muted:#667085;--line:#e5e7eb;--red:#dc2626;--amber:#d97706;--green:#16a34a}*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;background:var(--bg);color:var(--text)}header{background:#fff;border-bottom:1px solid var(--line);padding:20px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px;position:sticky;top:0;z-index:2}h1{font-size:24px;margin:0}.wrap{padding:24px;max-width:1480px;margin:auto}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}.card,.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px #0f172a0a}.card{padding:18px}.num{font-size:30px;font-weight:800}.label,.muted{color:var(--muted)}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}.toolbar input,.toolbar select,.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}.btn,button{border:0;border-radius:10px;background:var(--blue);color:#fff;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}.btn.secondary,button.secondary{background:#eef2ff;color:#1d4ed8}.btn.danger,button.danger{background:#fee2e2;color:#b91c1c}.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.panel{padding:18px;margin-bottom:20px}table{width:100%;border-collapse:collapse;background:#fff;border-radius:16px;overflow:hidden}th,td{text-align:left;border-bottom:1px solid var(--line);padding:12px;vertical-align:top}th{background:#f9fafb;font-size:13px;color:#475467}.badge{display:inline-block;border-radius:999px;padding:4px 8px;background:#eef2ff;color:#1d4ed8;font-size:12px;font-weight:700}.due{background:#fff7ed;color:#c2410c}.ok{background:#dcfce7;color:#15803d}.actions{display:flex;gap:8px;flex-wrap:wrap}.flash{padding:10px 14px;background:#ecfdf5;color:#047857;border-radius:10px;margin-bottom:14px}@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}table{font-size:14px}header{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<header>
+  <div><h1>实习投递看板</h1><div class="muted">记录投递、面试状态和 15 天复看提醒</div></div>
+  <form method="post" action="{{ url_for('logout') }}"><button class="secondary">退出</button></form>
+</header>
+<div class="wrap">
+  {% for message in get_flashed_messages() %}<div class="flash">{{ message }}</div>{% endfor %}
+
+  <section class="cards">
+    <div class="card"><div class="label">总投递</div><div class="num">{{ stats.total }}</div></div>
+    <div class="card"><div class="label">待复看</div><div class="num">{{ stats.due }}</div></div>
+    <div class="card"><div class="label">面试中</div><div class="num">{{ stats.interviewing }}</div></div>
+    <div class="card"><div class="label">已通过</div><div class="num">{{ stats.passed }}</div></div>
+  </section>
+
+  <section class="panel">
+    <h2>新增投递</h2>
+    <form method="post" action="{{ url_for('add_application') }}" class="grid">
+      <label class="field"><span>投递时间 *</span><input type="date" name="applied_at" required></label>
+      <label class="field"><span>公司 *</span><input name="company" required></label>
+      <label class="field"><span>岗位 *</span><input name="role" required></label>
+      <label class="field"><span>状态</span><select name="status">{% for s in statuses %}<option>{{ s }}</option>{% endfor %}</select></label>
+      <label class="field"><span>岗位链接</span><input name="job_url" type="url"></label>
+      <label class="field"><span>投递渠道</span><input name="channel"></label>
+      <label class="field"><span>城市/远程</span><input name="location"></label>
+      <label class="field"><span>简历版本</span><input name="resume_version"></label>
+      <label class="field"><span>是否面试</span><select name="has_interview"><option value="unknown">未知</option><option value="yes">是</option><option value="no">否</option></select></label>
+      <label class="field"><span>面试时间</span><input type="date" name="interview_at"></label>
+      <label class="field"><span>面试结果</span><select name="interview_passed"><option value="unknown">未知</option><option value="yes">通过</option><option value="no">未通过</option></select></label>
+      <label class="field"><span>下一步动作</span><input name="next_action"></label>
+      <label class="field full"><span>备注</span><textarea name="notes" rows="2"></textarea></label>
+      <div><button type="submit">保存投递</button></div>
+    </form>
+  </section>
+
+  <form class="toolbar" method="get">
+    <input name="q" placeholder="搜索公司/岗位/备注" value="{{ q }}">
+    <select name="status"><option value="">全部状态</option>{% for s in statuses %}<option value="{{ s }}" {% if selected_status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+    <label class="btn secondary"><input type="checkbox" name="due" value="1" {% if due_only %}checked{% endif %}> 只看待复看</label>
+    <button>筛选</button><a class="btn secondary" href="{{ url_for('index') }}">重置</a>
+  </form>
+
+  <table>
+    <thead><tr><th>投递</th><th>公司/岗位</th><th>状态</th><th>面试</th><th>可选信息</th><th>操作</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr>
+        <td>{{ row.applied_at }}<br>{% if row.is_due %}<span class="badge due">待复看</span>{% elif row.reviewed_at %}<span class="badge ok">已复看 {{ row.reviewed_at }}</span>{% endif %}</td>
+        <td><strong>{{ row.company }}</strong><br>{{ row.role }}{% if row.job_url %}<br><a href="{{ row.job_url }}" target="_blank">岗位链接</a>{% endif %}</td>
+        <td><span class="badge">{{ row.status }}</span></td>
+        <td>是否面试：{{ {'yes':'是','no':'否','unknown':'未知'}.get(row.has_interview,row.has_interview) }}<br>结果：{{ {'yes':'通过','no':'未通过','unknown':'未知'}.get(row.interview_passed,row.interview_passed) }}{% if row.interview_at %}<br>时间：{{ row.interview_at }}{% endif %}</td>
+        <td>{% if row.channel %}渠道：{{ row.channel }}<br>{% endif %}{% if row.location %}地点：{{ row.location }}<br>{% endif %}{% if row.resume_version %}简历：{{ row.resume_version }}<br>{% endif %}{% if row.next_action %}下一步：{{ row.next_action }}<br>{% endif %}{% if row.notes %}备注：{{ row.notes }}{% endif %}</td>
+        <td>
+          <details>
+            <summary class="btn secondary">编辑</summary>
+            <form method="post" action="{{ url_for('update_application', app_id=row.id) }}" class="grid" style="margin-top:10px;min-width:520px">
+              <label class="field"><span>投递时间 *</span><input type="date" name="applied_at" value="{{ row.applied_at }}" required></label>
+              <label class="field"><span>公司 *</span><input name="company" value="{{ row.company }}" required></label>
+              <label class="field"><span>岗位 *</span><input name="role" value="{{ row.role }}" required></label>
+              <label class="field"><span>状态</span><select name="status">{% for s in statuses %}<option {% if row.status==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
+              <label class="field"><span>岗位链接</span><input name="job_url" value="{{ row.job_url }}"></label>
+              <label class="field"><span>投递渠道</span><input name="channel" value="{{ row.channel }}"></label>
+              <label class="field"><span>城市/远程</span><input name="location" value="{{ row.location }}"></label>
+              <label class="field"><span>简历版本</span><input name="resume_version" value="{{ row.resume_version }}"></label>
+              <label class="field"><span>是否面试</span><select name="has_interview">{% for v,t in [('unknown','未知'),('yes','是'),('no','否')] %}<option value="{{ v }}" {% if row.has_interview==v %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></label>
+              <label class="field"><span>面试时间</span><input type="date" name="interview_at" value="{{ row.interview_at }}"></label>
+              <label class="field"><span>面试结果</span><select name="interview_passed">{% for v,t in [('unknown','未知'),('yes','通过'),('no','未通过')] %}<option value="{{ v }}" {% if row.interview_passed==v %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></label>
+              <label class="field"><span>下一步动作</span><input name="next_action" value="{{ row.next_action }}"></label>
+              <label class="field full"><span>备注</span><textarea name="notes" rows="2">{{ row.notes }}</textarea></label>
+              <div><button>保存修改</button></div>
+            </form>
+          </details>
+          <div class="actions" style="margin-top:8px">
+            <form method="post" action="{{ url_for('review_application', app_id=row.id) }}"><button class="secondary">标记复看</button></form>
+            <form method="post" action="{{ url_for('delete_application', app_id=row.id) }}" onsubmit="return confirm('确认删除这条投递？')"><button class="danger">删除</button></form>
+          </div>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">暂无投递记录</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

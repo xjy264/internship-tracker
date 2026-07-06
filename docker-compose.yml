@@ -1,0 +1,10 @@
+services:
+  internship-tracker:
+    build: .
+    container_name: internship-tracker
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8020:8020"
+    volumes:
+      - ./data:/app/data
