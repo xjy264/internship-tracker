@@ -1,40 +1,64 @@
 ---
 name: internship-tracker
-description: Drive the internship-tracker project, a Flask and SQLite web app for managing internship applications. Use when Codex needs to add or modify internship application tracking features, update the web dashboard, maintain the SQLite schema, deploy to the 82 server, or follow the project workflow of test, commit, push, then ask before future deployments.
+description: Drive the internship-tracker project, an agent-first Flask and SQLite internship application tracker. Use when Codex or Claude Code needs to write internship applications through the repository CLI, maintain the read-only web dashboard, manage review reminder tasks, update the SQLite schema, or follow the test, commit, push, then ask-before-deploy workflow.
 ---
 
 # Internship Tracker
 
 Use this skill in the `internship-tracker` repository.
 
+## Agent-first rule
+
+- Write data only through `python3 scripts/internship_cli.py --json ...`.
+- Do not edit SQLite directly.
+- Do not re-add manual write forms to the web UI unless the user explicitly asks.
+- Prefer `--json` for every Codex/Claude Code operation.
+
+## Common commands
+
+Add an application:
+
+```bash
+python3 scripts/internship_cli.py --json applications add --applied-at YYYY-MM-DD --company 公司 --role 岗位
+```
+
+Update an application:
+
+```bash
+python3 scripts/internship_cli.py --json applications update --id ID --status 面试中 --has-interview yes --interview-passed unknown
+```
+
+List applications:
+
+```bash
+python3 scripts/internship_cli.py --json applications list
+python3 scripts/internship_cli.py --json applications list --due
+```
+
+Review or delete:
+
+```bash
+python3 scripts/internship_cli.py --json applications review --id ID
+python3 scripts/internship_cli.py --json applications delete --id ID
+```
+
+Reset the task list to the current required prompt:
+
+```bash
+python3 scripts/internship_cli.py --json tasks clear
+python3 scripts/internship_cli.py --json tasks add --title "务必开始投递"
+```
+
 ## Project rules
 
-- Keep required application fields limited to `applied_at`, `company`, and `role` unless the user asks to change them.
-- Treat `job_url`, `channel`, `status`, `location`, `resume_version`, `has_interview`, `interview_at`, `interview_passed`, `next_action`, `notes`, and `reviewed_at` as optional.
-- Do not commit `.env`, `data/`, SQLite databases, or real application records.
-- Prefer the existing Flask + SQLite + server-rendered HTML stack; do not add a SPA/build chain unless the user explicitly asks.
+- Required application fields: `applied_at`, `company`, `role`.
+- Optional fields: `job_url`, `channel`, `status`, `location`, `resume_version`, `has_interview`, `interview_at`, `interview_passed`, `next_action`, `notes`, `reviewed_at`.
+- Keep production data in `data/app.sqlite3`; do not commit it.
 
 ## Workflow
 
 1. Modify locally.
-2. Run `python3 -m unittest` with project dependencies available.
-3. Run `docker compose config` and `docker build -t internship-tracker:local .` for deployment-affecting changes.
-4. Commit to `main`.
-5. Push to `origin/main`.
-6. Ask the user before deploying future changes to the 82 server.
-
-## Runtime
-
-- Local app entrypoint: `app.py`.
-- Production database: `data/app.sqlite3` mounted by Docker Compose.
-- Production server path: `/home/ubuntu/apps/internship-tracker`.
-- Production URL: `http://82.156.194.174:8020`.
-- SSH key for deployment: `~/.ssh/id_ed25519_remote_20260630`.
-
-## Reminder rule
-
-Show an application as needing review when:
-
-- `applied_at` is at least 15 days old,
-- `reviewed_at` is empty,
-- `status` is not `通过`, `拒绝`, or `放弃`.
+2. Run tests and Docker checks.
+3. Commit to `main`.
+4. Push to `origin/main`.
+5. Ask before deploying future changes to the 82 server.

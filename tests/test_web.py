@@ -3,7 +3,8 @@ import tempfile
 import unittest
 from datetime import date, timedelta
 
-from app import create_app, init_db
+from app import create_app, get_db, init_db
+from tracker_core import add_application, add_task
 
 
 class WebAppTest(unittest.TestCase):
@@ -34,7 +35,6 @@ class WebAppTest(unittest.TestCase):
         self.assertEqual(good.status_code, 200)
         self.assertIn("实习投递看板".encode(), good.data)
 
-
     def test_empty_app_password_does_not_allow_login(self):
         app = create_app({
             "TESTING": True,
@@ -46,61 +46,32 @@ class WebAppTest(unittest.TestCase):
         response = client.post("/login", data={"password": ""})
         self.assertEqual(response.status_code, 401)
 
-    def test_application_crud_and_required_fields(self):
+    def test_home_is_read_only_one_row_per_application_and_shows_task(self):
+        with self.app.app_context():
+            db = get_db()
+            add_task(db, "务必开始投递")
+            add_application(db, {
+                "applied_at": "2026-07-06",
+                "company": "字节",
+                "role": "前端实习",
+                "status": "已投递",
+            })
+        page = self.login().data.decode()
+        self.assertIn("务必开始投递", page)
+        self.assertIn("字节", page)
+        self.assertEqual(page.count('data-app-id="1"'), 1)
+        for text in ("新增投递", "保存投递", "编辑", "删除", "标记复看"):
+            self.assertNotIn(text, page)
+        self.assertEqual(self.client.post("/applications", data={}).status_code, 404)
+
+    def test_due_filter_still_works_in_read_only_table(self):
         self.login()
-        missing = self.client.post("/applications", data={"applied_at": "2026-07-06", "company": "", "role": "前端实习"})
-        self.assertEqual(missing.status_code, 400)
-
-        created = self.client.post("/applications", data={
-            "applied_at": "2026-07-06",
-            "company": "字节",
-            "role": "前端实习",
-            "status": "已投递",
-            "job_url": "",
-            "channel": "",
-            "location": "",
-            "resume_version": "",
-            "has_interview": "unknown",
-            "interview_at": "",
-            "interview_passed": "unknown",
-            "next_action": "",
-            "notes": "",
-        }, follow_redirects=True)
-        self.assertIn("字节".encode(), created.data)
-
-        updated = self.client.post("/applications/1/update", data={
-            "applied_at": "2026-07-06",
-            "company": "字节跳动",
-            "role": "前端实习",
-            "status": "面试中",
-            "has_interview": "yes",
-            "interview_passed": "unknown",
-        }, follow_redirects=True)
-        self.assertIn("字节跳动".encode(), updated.data)
-        self.assertIn("面试中".encode(), updated.data)
-
-        deleted = self.client.post("/applications/1/delete", follow_redirects=True)
-        self.assertNotIn("字节跳动".encode(), deleted.data)
-
-    def test_15_day_review_reminder_and_review_action(self):
-        self.login()
-        old_day = (date.today() - timedelta(days=16)).isoformat()
-        self.client.post("/applications", data={
-            "applied_at": old_day,
-            "company": "老公司",
-            "role": "后端实习",
-            "status": "已投递",
-            "has_interview": "unknown",
-            "interview_passed": "unknown",
-        })
-
-        page = self.client.get("/?due=1")
-        self.assertIn("老公司".encode(), page.data)
-        self.assertIn("待复看".encode(), page.data)
-
-        self.client.post("/applications/1/review", follow_redirects=True)
-        reviewed = self.client.get("/?due=1")
-        self.assertNotIn("老公司".encode(), reviewed.data)
+        with self.app.app_context():
+            old_day = (date.today() - timedelta(days=16)).isoformat()
+            add_application(get_db(), {"applied_at": old_day, "company": "老公司", "role": "后端实习", "status": "已投递"})
+        page = self.client.get("/?due=1").data.decode()
+        self.assertIn("老公司", page)
+        self.assertIn("待复看", page)
 
 
 if __name__ == "__main__":

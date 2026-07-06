@@ -1,6 +1,6 @@
 interface:
   display_name: "实习投递记录"
-  short_description: "维护实习投递管理网页、数据库和部署流程"
-  default_prompt: "Use $internship-tracker to update the internship application dashboard and keep the test, commit, push, deploy workflow."
+  short_description: "通过CLI维护实习投递数据和只读看板"
+  default_prompt: "Use $internship-tracker to update internship applications through the JSON CLI and keep the read-only dashboard workflow."
 policy:
   allow_implicit_invocation: true
