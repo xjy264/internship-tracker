@@ -27,6 +27,7 @@ docker compose up -d --build
 4. push 到 GitHub `main`。
 5. 询问是否上线。
 6. 确认后到 82 服务器拉取并 `docker compose up -d --build`。
+   - 如果 82 服务器无法访问 GitHub，就在确认代码已 push 后用 `git archive HEAD | ssh ... tar -x` 上传当前提交再部署。
 
 ## 数据
 
