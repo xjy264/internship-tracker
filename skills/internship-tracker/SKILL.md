@@ -1,6 +1,6 @@
 ---
 name: internship-tracker
-description: Drive the internship-tracker project, an agent-first Flask and SQLite internship application tracker. Use when Codex or Claude Code needs to write internship applications through the repository CLI, maintain the read-only web dashboard, manage review reminder tasks, update the SQLite schema, or follow the test, commit, push, then ask-before-deploy workflow.
+description: Drive the internship-tracker project, an agent-first Flask and SQLite internship application tracker. Use when Codex or Claude Code needs to write internship applications through the repository CLI, maintain the read-only web dashboard, manage the application memo, update the SQLite schema, or follow the test, commit, push, then ask-before-deploy workflow.
 ---
 
 # Internship Tracker
@@ -42,11 +42,12 @@ python3 scripts/internship_cli.py --json applications review --id ID
 python3 scripts/internship_cli.py --json applications delete --id ID
 ```
 
-Reset the task list to the current required prompt:
+Maintain the application memo. Use each task title as a company or target the user still wants to apply to:
 
 ```bash
 python3 scripts/internship_cli.py --json tasks clear
-python3 scripts/internship_cli.py --json tasks add --title "务必开始投递"
+python3 scripts/internship_cli.py --json tasks add --title "美团"
+python3 scripts/internship_cli.py --json tasks list
 ```
 
 ## Project rules

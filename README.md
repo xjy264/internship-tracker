@@ -1,6 +1,6 @@
 # 实习投递记录器
 
-Agent-first 的实习投递管理小项目：Codex / Claude Code 通过 CLI 写入 SQLite，网页只读展示投递表格和任务。
+Agent-first 的实习投递管理小项目：Codex / Claude Code 通过 CLI 写入 SQLite，网页只读展示投递表格和投递备忘录。
 
 ## Agent CLI
 
@@ -12,7 +12,7 @@ python3 scripts/internship_cli.py --json applications list --due
 python3 scripts/internship_cli.py --json applications update --id 1 --status 面试中 --has-interview yes
 python3 scripts/internship_cli.py --json applications review --id 1
 python3 scripts/internship_cli.py --json tasks clear
-python3 scripts/internship_cli.py --json tasks add --title "务必开始投递"
+python3 scripts/internship_cli.py --json tasks add --title "美团"
 python3 scripts/internship_cli.py --json tasks list
 ```
 

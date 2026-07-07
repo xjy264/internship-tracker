@@ -46,10 +46,10 @@ class WebAppTest(unittest.TestCase):
         response = client.post("/login", data={"password": ""})
         self.assertEqual(response.status_code, 401)
 
-    def test_home_is_read_only_one_row_per_application_and_shows_task(self):
+    def test_home_is_read_only_one_row_per_application_and_shows_task_memo(self):
         with self.app.app_context():
             db = get_db()
-            add_task(db, "务必开始投递")
+            add_task(db, "美团")
             add_application(db, {
                 "applied_at": "2026-07-06",
                 "company": "字节",
@@ -57,7 +57,9 @@ class WebAppTest(unittest.TestCase):
                 "status": "已投递",
             })
         page = self.login().data.decode()
-        self.assertIn("务必开始投递", page)
+        self.assertIn("投递备忘录", page)
+        self.assertNotIn("当前投递任务", page)
+        self.assertIn("美团", page)
         self.assertIn("字节", page)
         self.assertEqual(page.count('data-app-id="1"'), 1)
         for text in ("新增投递", "保存投递", "编辑", "删除", "标记复看"):

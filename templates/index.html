@@ -22,8 +22,8 @@
   </section>
 
   <section class="panel">
-    <div class="label">当前投递任务</div>
-    {% for task in tasks %}<div class="task">{{ task.title }}</div>{% else %}<div class="muted">暂无任务</div>{% endfor %}
+    <div class="label">投递备忘录</div>
+    {% for task in tasks %}<div class="task">{{ task.title }}</div>{% else %}<div class="muted">暂无待投递公司</div>{% endfor %}
   </section>
 
   <form class="toolbar" method="get">
