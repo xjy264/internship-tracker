@@ -41,11 +41,11 @@
         <tr data-app-id="{{ row.id }}">
           <td>{{ row.id }}</td>
           <td>{{ row.applied_at }}</td>
-          <td>{{ row.company }}</td>
+          <td>{% if row.job_url %}<a href="{{ row.job_url }}" target="_blank" rel="noopener noreferrer">{{ row.company }}</a>{% else %}{{ row.company }}{% endif %}</td>
           <td>{{ row.role }}</td>
           <td><span class="badge">{{ row.status }}</span></td>
           <td>{% if row.is_due %}<span class="badge due">待复看</span>{% elif row.reviewed_at %}<span class="badge ok">已复看</span>{% endif %}</td>
-          <td>{% if row.job_url %}<a href="{{ row.job_url }}" target="_blank">打开</a>{% endif %}</td>
+          <td>{% if row.job_url %}<a href="{{ row.job_url }}" target="_blank" rel="noopener noreferrer">打开</a>{% endif %}</td>
           <td>{{ row.channel }}</td>
           <td>{{ row.location }}</td>
           <td>{{ row.resume_version }}</td>

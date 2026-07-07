@@ -64,6 +64,17 @@ class WebAppTest(unittest.TestCase):
             self.assertNotIn(text, page)
         self.assertEqual(self.client.post("/applications", data={}).status_code, 404)
 
+    def test_company_links_to_job_url_in_new_tab(self):
+        with self.app.app_context():
+            add_application(get_db(), {
+                "applied_at": "2026-07-07",
+                "company": "美团",
+                "role": "后台产品实习生",
+                "job_url": "https://zhaopin.example/jobs/1",
+            })
+        page = self.login().data.decode()
+        self.assertIn('<a href="https://zhaopin.example/jobs/1" target="_blank" rel="noopener noreferrer">美团</a>', page)
+
     def test_due_filter_still_works_in_read_only_table(self):
         self.login()
         with self.app.app_context():
